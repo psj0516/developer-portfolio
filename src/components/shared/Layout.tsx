@@ -1,6 +1,10 @@
 import Head from 'next/head';
 
-function Layout(children: React.ReactNode) {
+interface LayoutInfoProps {
+  children: React.ReactNode;
+}
+
+function Layout({ children }: LayoutInfoProps) {
   return (
     <>
       <Head>

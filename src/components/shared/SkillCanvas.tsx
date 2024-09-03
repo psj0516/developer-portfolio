@@ -74,38 +74,11 @@ const SkillCanvas = () => {
       mouseConstraint: MouseConstraint;
     let observer: IntersectionObserver;
 
-    // Matter.js 엔진 및 렌더러 초기화
     initScene();
     initMouse();
     initIntersectionObserver();
     initGround();
     initImageBoxes();
-
-    Events.on(mouseConstraint, 'mousedown', () => {
-      const bodyLabel = mouseConstraint.body?.label;
-
-      if (bodyLabel) {
-        let newSelected: SkillItem | null = null;
-
-        Object.keys(data).forEach((categoryKey) => {
-          const foundItem = Object.keys(data[categoryKey].items).find(
-            (key) => data[categoryKey].items[key].label === bodyLabel,
-          );
-          if (foundItem) {
-            newSelected = data[categoryKey].items[foundItem];
-          }
-        });
-        newSelected && setSelected(newSelected);
-      }
-    });
-
-    Events.on(runner, 'tick', () => {
-      gravityDeg += 1;
-      engine.world.gravity.x =
-        garvityPower * Math.cos((Math.PI / 180) * gravityDeg);
-      engine.world.gravity.y =
-        garvityPower * Math.sin((Math.PI / 180) * gravityDeg);
-    });
 
     function initScene() {
       engine = Engine.create();
@@ -123,6 +96,14 @@ const SkillCanvas = () => {
 
       Render.run(render);
       Runner.run(runner, engine);
+
+      Events.on(runner, 'tick', () => {
+        gravityDeg += 1;
+        engine.world.gravity.x =
+          garvityPower * Math.cos((Math.PI / 180) * gravityDeg);
+        engine.world.gravity.y =
+          garvityPower * Math.sin((Math.PI / 180) * gravityDeg);
+      });
     }
 
     function initMouse() {
@@ -132,8 +113,23 @@ const SkillCanvas = () => {
       });
       Composite.add(engine.world, mouseConstraint);
 
-      canvas!.removeEventListener('mousewheel', mouse.mousewheel);
-      canvas!.removeEventListener('DOMMouseScroll', mouse.mousewheel);
+      Events.on(mouseConstraint, 'mousedown', () => {
+        const bodyLabel = mouseConstraint.body?.label;
+
+        if (bodyLabel) {
+          let newSelected: SkillItem | null = null;
+
+          Object.keys(data).forEach((categoryKey) => {
+            const foundItem = Object.keys(data[categoryKey].items).find(
+              (key) => data[categoryKey].items[key].label === bodyLabel,
+            );
+            if (foundItem) {
+              newSelected = data[categoryKey].items[foundItem];
+            }
+          });
+          newSelected && setSelected(newSelected);
+        }
+      });
     }
 
     function initIntersectionObserver() {
@@ -218,7 +214,7 @@ const SkillCanvas = () => {
     return () => {
       if (observer) observer.unobserve(canvas!);
 
-      Composite.clear(engine.world);
+      Composite.clear(engine.world, false);
       Mouse.clearSourceEvents(mouse);
       Runner.stop(runner);
       Render.stop(render);
