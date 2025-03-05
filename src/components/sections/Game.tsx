@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
 import { colors } from '@/styles/colorPalette';
 import Text from '../shared/Text';
@@ -13,7 +13,8 @@ const Game: React.FC = () => {
   const [matchedIndexes, setMatchedIndexes] = useState<number[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     shuffleCards();
@@ -30,30 +31,29 @@ const Game: React.FC = () => {
   }, [flippedIndexes, cards]);
 
   useEffect(() => {
-    if (matchedIndexes.length === cards.length && intervalId) {
-      clearInterval(intervalId);
+    if (matchedIndexes.length === cards.length && intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
-  }, [matchedIndexes, cards.length, intervalId]);
+  }, [matchedIndexes, cards.length]);
 
   useEffect(() => {
     if (startTime) {
-      const id = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
       }, 1000);
-      setIntervalId(id);
     }
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [startTime, intervalId]);
+  }, [startTime]);
 
   const shuffleCards = () => {
     setCards(shuffleArray(initialCards));
     setFlippedIndexes([]);
     setMatchedIndexes([]);
     setElapsedTime(0);
-    if (intervalId) {
-      clearInterval(intervalId);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
     setStartTime(null); // Reset startTime to wait for the first click
   };
